@@ -1,7 +1,7 @@
 import 'package:cams/core/services/storage_service.dart';
 import 'package:dio/dio.dart';
 
-import '../constants/api_constants.dart';
+import 'api_constants.dart';
 
 class ApiClient {
   late Dio dio;

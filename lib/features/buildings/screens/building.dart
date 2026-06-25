@@ -1,15 +1,80 @@
+import 'package:cams/shared/datatable/actions.dart';
+import 'package:cams/shared/datatable/chips.dart';
+import 'package:cams/shared/datatable/datatable.dart';
+import 'package:cams/shared/datatable/table_actions.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cams/shared/layouts/navigation.dart';
 
 import '../controllers/building_controller.dart';
-import '../models/building_model.dart';
 import '../widgets/building_dialog.dart';
 import '../../../core/routes/app_routes.dart';
 
 class BuildingScreen extends GetView<BuildingController> {
   const BuildingScreen({super.key});
+
+  List<DataColumn2> _columns() {
+    return const [
+      DataColumn2(label: Text("S No"), size: ColumnSize.S),
+      DataColumn2(label: Text("Name")),
+      DataColumn2(label: Text("Type")),
+      DataColumn2(label: Text("Gender")),
+      DataColumn2(label: Text("Status")),
+      DataColumn2(label: Text("Actions")),
+    ];
+  }
+
+  List<DataRow> _rows() {
+    return controller.buildings.asMap().entries.map((entry) {
+      final index = entry.key;
+      final building = entry.value;
+
+      return DataRow(
+        cells: [
+          DataCell(Text("${index + 1}")),
+          DataCell(Text(building.name)),
+          DataCell(Text(building.type.label)),
+          DataCell(Text(building.genderRestriction.label)),
+          DataCell(StatusBadge(active: building.status)),
+          DataCell(
+            TableActionMenu(
+              actions: [
+                TableAction(
+                  title: "Edit",
+                  icon: Icons.edit,
+                  onTap: () {
+                    Get.dialog(BuildingDialog(building: building));
+                  },
+                ),
+                TableAction(
+                  title: "Delete",
+                  icon: Icons.delete,
+                  onTap: () {
+                    Get.defaultDialog(
+                      title: 'Delete Building',
+
+                      middleText: 'Are you sure?',
+
+                      textConfirm: 'Delete',
+
+                      textCancel: 'Cancel',
+
+                      onConfirm: () {
+                        Get.back();
+
+                        controller.deleteBuilding(building.id);
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,84 +102,7 @@ class BuildingScreen extends GetView<BuildingController> {
           return Padding(
             padding: const EdgeInsets.all(20),
 
-            child: DataTable2(
-              columnSpacing: 12,
-              horizontalMargin: 12,
-              minWidth: 1000,
-              border: TableBorder.all(color: Colors.grey.shade300, width: 1),
-
-              columns: const [
-                DataColumn2(label: Text('S no'), size: ColumnSize.S),
-
-                DataColumn2(label: Text('Name')),
-
-                DataColumn2(label: Text('Type')),
-
-                DataColumn2(label: Text('Gender')),
-
-                DataColumn2(label: Text('Status')),
-
-                DataColumn2(label: Text('Actions'), size: ColumnSize.M),
-              ],
-
-              rows: controller.buildings.map((BuildingModel building) {
-                return DataRow(
-                  cells: [
-                    DataCell(
-                      Text(
-                        (controller.buildings.indexOf(building) + 1).toString(),
-                      ),
-                    ),
-
-                    DataCell(Text(building.name)),
-
-                    DataCell(Text(building.type.label)),
-
-                    DataCell(Text(building.genderRestriction.label)),
-
-                    DataCell(
-                      Chip(
-                        label: Text(building.status ? 'Active' : 'Inactive'),
-                      ),
-                    ),
-
-                    DataCell(
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () {
-                              Get.dialog(BuildingDialog(building: building));
-                            },
-                          ),
-
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () {
-                              Get.defaultDialog(
-                                title: 'Delete Building',
-
-                                middleText: 'Are you sure?',
-
-                                textConfirm: 'Delete',
-
-                                textCancel: 'Cancel',
-
-                                onConfirm: () {
-                                  Get.back();
-
-                                  controller.deleteBuilding(building.id);
-                                },
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
+            child: ResponsiveDataTable(columns: _columns(), rows: _rows()),
           );
         }),
       ),
